@@ -63,7 +63,7 @@ Repo: https://github.com/momotheoxy/OpenGLStarter
 
 3. Tools:
    ```bash
-   brew install git cmake ninja
+   brew install git cmake ninja pkg-config
    ```
 
 4. vcpkg:
