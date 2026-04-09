@@ -4,9 +4,20 @@
 
   "configurePresets": [
     {
-      "name": "win-msvc",
+      "name": "win-msvc-2022",
       "displayName": "Windows MSVC (VS2022)",
       "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
+      }
+    },
+    {
+      "name": "win-msvc-2026",
+      "displayName": "Windows MSVC (VS2026)",
+      "generator": "Visual Studio 18 2026",
       "architecture": "x64",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
@@ -52,10 +63,13 @@
   ],
 
   "buildPresets": [
-    { "name": "build-win-debug",   "configurePreset": "win-msvc",  "configuration": "Debug"   },
-    { "name": "build-win-release", "configurePreset": "win-msvc",  "configuration": "Release" },
-    { "name": "build-mac-intel",   "configurePreset": "mac-intel"  },
-    { "name": "build-mac-arm64",   "configurePreset": "mac-arm64"  },
-    { "name": "build-linux",       "configurePreset": "linux-x64"  }
+    { "name": "build-win-2022-debug",   "configurePreset": "win-msvc-2022", "configuration": "Debug" },
+    { "name": "build-win-2022-release", "configurePreset": "win-msvc-2022", "configuration": "Release" },
+    { "name": "build-win-2026-debug",   "configurePreset": "win-msvc-2026", "configuration": "Debug" },
+    { "name": "build-win-2026-release", "configurePreset": "win-msvc-2026", "configuration": "Release" },
+
+    { "name": "build-mac-intel", "configurePreset": "mac-intel" },
+    { "name": "build-mac-arm64", "configurePreset": "mac-arm64" },
+    { "name": "build-linux",     "configurePreset": "linux-x64" }
   ]
 }
