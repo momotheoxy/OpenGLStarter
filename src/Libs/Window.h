@@ -1,34 +1,45 @@
 #ifndef WINDOW____H
 #define WINDOW____H
 
-#include <stdio.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 class Window
 {
-    public:
-        Window();
-        Window(GLint windowWidth, GLint windowHeight, GLint majorVersion, GLint minorVersion);
-        ~Window();
+public:
+    Window();
+    Window(GLint windowWidth, GLint windowHeight, GLint majorVersion, GLint minorVersion);
+    ~Window();
 
-        int initialise();
+    Window(const Window&) = delete;
+    Window& operator=(const Window&) = delete;
 
-        GLint getBufferWidth() {return bufferWidth;}
-        GLint getBufferHeight() {return bufferHeight;}
+    int initialise();
 
-        bool getShouldClose() {return glfwWindowShouldClose(mainWindow);}
+    GLint getBufferWidth() const { return bufferWidth; }
+    GLint getBufferHeight() const { return bufferHeight; }
 
-        void swapBuffers() {glfwSwapBuffers(mainWindow);}
+    bool getShouldClose() const
+    {
+        return mainWindow == nullptr || glfwWindowShouldClose(mainWindow);
+    }
 
-        GLFWwindow* getWindow() { return mainWindow; }
+    void swapBuffers()
+    {
+        if (mainWindow != nullptr)
+            glfwSwapBuffers(mainWindow);
+    }
 
+    GLFWwindow* getWindow() const { return mainWindow; }
 
-    private:
-        GLFWwindow* mainWindow;
-        GLint glfwMajorVersion, glfwMinorVersion;
-        GLint width, height;
-        GLint bufferWidth, bufferHeight;
+private:
+    GLFWwindow* mainWindow = nullptr;
+    GLint glfwMajorVersion = 3;
+    GLint glfwMinorVersion = 3;
+    GLint width = 800;
+    GLint height = 600;
+    GLint bufferWidth = 0;
+    GLint bufferHeight = 0;
 };
 
 #endif

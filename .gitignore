@@ -1,17 +1,19 @@
-# CMake
+# CMake build output
 build/
 build-*/
+cmake-build-*/
 CMakeCache.txt
 CMakeFiles/
-cmake-build-*/
-*.cmake
 
-# VS / MSVC
+# Local CMake presets (machine-specific; do not commit)
+CMakeUserPresets.json
+
+# Visual Studio / MSVC
 .vs/
 *.vcxproj*
 *.sln
 
-# Compiled
+# Compiled output
 *.exe
 *.dll
 *.lib
@@ -20,6 +22,6 @@ cmake-build-*/
 *.o
 *.a
 
-# OS cruft
+# OS files
 .DS_Store
 Thumbs.db
