@@ -1,8 +1,12 @@
 #include "Shader.h"
 
+#include <cstdio>
+#include <cstring>
+#include <fstream>
+
 Shader::Shader()
+    : shader(0)
 {
-    shader = 0;
 }
 
 Shader::~Shader()
@@ -10,41 +14,39 @@ Shader::~Shader()
     ClearShader();
 }
 
-
-void Shader::CreateFromFiles (const char* vertexLocation, const char* fragmentLocation)
+void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLocation)
 {
-    std::string vertexString = ReadFile(vertexLocation);
-    std::string fragmentString = ReadFile(fragmentLocation);
+    const std::string vertexString = ReadFile(vertexLocation);
+    const std::string fragmentString = ReadFile(fragmentLocation);
 
-    const char* vertexCode = vertexString.c_str();
-    const char* fragmentCode = fragmentString.c_str();
+    if (vertexString.empty() || fragmentString.empty())
+    {
+        std::fprintf(stderr, "Shader source file is empty or could not be read.\n");
+        return;
+    }
 
-    CompileShaders(vertexCode, fragmentCode);
+    CompileShaders(vertexString.c_str(), fragmentString.c_str());
 }
 
 std::string Shader::ReadFile(const char* fileLocation)
 {
-    std::string content;
-    std::ifstream fileStream(fileLocation, std::ios::in);
-
+    std::ifstream fileStream(fileLocation);
     if (!fileStream.is_open())
     {
-        printf("Failed to read %s!, File doesn't exist.\n", fileLocation);
-        return "";
+        std::fprintf(stderr, "Failed to read %s: file does not exist or cannot be opened.\n", fileLocation);
+        return {};
     }
 
-    std::string line = "";
-
-    while (!fileStream.eof())
+    std::string content;
+    std::string line;
+    while (std::getline(fileStream, line))
     {
-        std::getline(fileStream, line);
-        content.append(line + "\n");
+        content += line;
+        content += '\n';
     }
 
-    fileStream.close();
     return content;
 }
-
 
 void Shader::UseShader()
 {
@@ -60,73 +62,70 @@ void Shader::ClearShader()
     }
 }
 
-void Shader::CreateFromString (const char* vertexCode, const char* fragmentCode)
+void Shader::CreateFromString(const char* vertexCode, const char* fragmentCode)
 {
     CompileShaders(vertexCode, fragmentCode);
 }
 
-
 void Shader::CompileShaders(const char* vertexCode, const char* fragmentCode)
 {
-    shader = glCreateProgram();
+    ClearShader();
 
-    if (!shader)
+    shader = glCreateProgram();
+    if (shader == 0)
     {
-        printf("Error creating shader program!\n");
+        std::fprintf(stderr, "Error creating shader program.\n");
         return;
     }
 
-    AddShader(shader, vertexCode, GL_VERTEX_SHADER);
-    AddShader(shader, fragmentCode, GL_FRAGMENT_SHADER);
-
-    GLint result = 0;
-    GLchar elog[1024] = { 0 };
+    if (!AddShader(shader, vertexCode, GL_VERTEX_SHADER) ||
+        !AddShader(shader, fragmentCode, GL_FRAGMENT_SHADER))
+    {
+        ClearShader();
+        return;
+    }
 
     glLinkProgram(shader);
+
+    GLint result = 0;
     glGetProgramiv(shader, GL_LINK_STATUS, &result);
-
     if (!result)
     {
-        glGetProgramInfoLog(shader, sizeof(elog), NULL, elog);
-        printf("Error linking program: '%s'\n", elog);
-        return;
-    }
-
-    glValidateProgram(shader);
-    glGetProgramiv(shader, GL_VALIDATE_STATUS, &result);
-
-    if (!result)
-    {
-        glGetProgramInfoLog(shader, sizeof(elog), NULL, elog);
-        printf("Error validating program: '%s'\n", elog);
-        return;
+        GLchar errorLog[1024] = {};
+        glGetProgramInfoLog(shader, sizeof(errorLog), nullptr, errorLog);
+        std::fprintf(stderr, "Error linking shader program: %s\n", errorLog);
+        ClearShader();
     }
 }
 
-void Shader::AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderType)
+bool Shader::AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderType)
 {
-    GLuint theShader = glCreateShader(shaderType);
+    const GLuint theShader = glCreateShader(shaderType);
+    if (theShader == 0)
+    {
+        std::fprintf(stderr, "Error creating shader object.\n");
+        return false;
+    }
 
-    const GLchar* theCode[1];
-    theCode[0] = shaderCode;
+    const GLchar* code[] = { shaderCode };
+    const GLint codeLength[] = { static_cast<GLint>(std::strlen(shaderCode)) };
 
-    GLint codeLength[1];
-    codeLength[0] = strlen(shaderCode);
-
-    glShaderSource(theShader, 1, theCode, codeLength);
+    glShaderSource(theShader, 1, code, codeLength);
     glCompileShader(theShader);
 
     GLint result = 0;
-    GLchar elog[1024] = { 0 };
-
     glGetShaderiv(theShader, GL_COMPILE_STATUS, &result);
-
     if (!result)
     {
-        glGetShaderInfoLog(theShader, sizeof(elog), NULL, elog);
-        printf("Error compiling the %d shader: '%s'\n", shaderType, elog);
-        return;
+        GLchar errorLog[1024] = {};
+        glGetShaderInfoLog(theShader, sizeof(errorLog), nullptr, errorLog);
+        std::fprintf(stderr, "Error compiling shader type %u: %s\n", shaderType, errorLog);
+        glDeleteShader(theShader);
+        return false;
     }
 
     glAttachShader(theProgram, theShader);
+    // Safe after attachment: OpenGL keeps the shader alive until it is no longer attached.
+    glDeleteShader(theShader);
+    return true;
 }
