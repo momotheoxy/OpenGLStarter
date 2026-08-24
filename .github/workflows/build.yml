@@ -43,6 +43,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             pkg-config \
+            ninja-build \
+            autoconf \
+            autoconf-archive \
+            automake \
+            libtool \
             libxinerama-dev \
             libxcursor-dev \
             xorg-dev \
