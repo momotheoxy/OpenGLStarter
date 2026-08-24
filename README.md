@@ -255,6 +255,7 @@ OpenGLStarter/
 │   │   ├── Shader.h
 │   │   ├── Window.cpp
 │   │   └── Window.h
+│   ├── ProjectPaths.h.in
 │   └── main.cpp
 ├── CMakeLists.txt
 ├── CMakePresets.json
@@ -344,9 +345,11 @@ Then delete the failed build directory or run **CMake: Delete Cache and Reconfig
 
 ## Shader files cannot be found
 
-The CMake build automatically copies the `Shaders` folder beside the executable.
+The starter does **not** depend on the program's current working directory for shader files. During CMake configuration, `src/ProjectPaths.h.in` is used to generate a header containing the absolute path to this clone's `Shaders` folder. The program then opens `shader.vert` and `shader.frag` from that folder using `std::filesystem`.
 
-Run the program through the supplied VS Code debug configuration (F5) or from the executable's own directory.
+Students should edit only the shader files in the repository's top-level `Shaders/` folder. There is no second copied shader folder beside the executable.
+
+If the repository is moved or renamed after CMake has already been configured, run **CMake: Delete Cache and Reconfigure** so the generated path is refreshed. If a shader still cannot be opened, the program prints the exact path it attempted to read.
 
 ---
 
