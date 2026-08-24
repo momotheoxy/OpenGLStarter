@@ -10,6 +10,15 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glew CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
+# Generate an absolute shader directory for this clone. The program can then
+# find shaders regardless of the working directory chosen by VS Code/VS/CMake.
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated")
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/ProjectPaths.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/generated/ProjectPaths.h
+  @ONLY
+)
+
 add_executable(OpenGLStarter
   src/main.cpp
   src/Libs/Mesh.cpp
@@ -20,6 +29,7 @@ add_executable(OpenGLStarter
 target_include_directories(OpenGLStarter PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src
   ${CMAKE_CURRENT_SOURCE_DIR}/src/Libs
+  ${CMAKE_CURRENT_BINARY_DIR}/generated
 )
 
 target_link_libraries(OpenGLStarter PRIVATE
@@ -33,11 +43,3 @@ if(APPLE)
   # OpenGL is deprecated by Apple but remains available (up to OpenGL 4.1).
   target_compile_definitions(OpenGLStarter PRIVATE GL_SILENCE_DEPRECATION)
 endif()
-
-# Keep shader paths the same on every OS by copying them beside the executable.
-add_custom_command(TARGET OpenGLStarter POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-          ${CMAKE_CURRENT_SOURCE_DIR}/Shaders
-          $<TARGET_FILE_DIR:OpenGLStarter>/Shaders
-  COMMENT "Copying shaders"
-)

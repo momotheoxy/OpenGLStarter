@@ -3,11 +3,13 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <filesystem>
 #include <vector>
 
 #include "Libs/Mesh.h"
 #include "Libs/Shader.h"
 #include "Libs/Window.h"
+#include "ProjectPaths.h"
 
 const GLint WIDTH = 800;
 const GLint HEIGHT = 600;
@@ -15,8 +17,8 @@ const GLint HEIGHT = 600;
 std::vector<Mesh*> meshList;
 std::vector<Shader*> shaderList;
 
-static const char* vShader = "Shaders/shader.vert";
-static const char* fShader = "Shaders/shader.frag";
+const std::filesystem::path shaderDirectory =
+    std::filesystem::u8path(OPENGL_STARTER_SHADER_DIR);
 
 void CreateTriangle()
 {
@@ -40,7 +42,10 @@ void CreateTriangle()
 void CreateShaders()
 {
     Shader* shader1 = new Shader();
-    shader1->CreateFromFiles(vShader, fShader);
+    shader1->CreateFromFiles(
+        shaderDirectory / "shader.vert",
+        shaderDirectory / "shader.frag"
+    );
     shaderList.push_back(shader1);
 }
 

@@ -3,6 +3,7 @@
 
 #include <GL/glew.h>
 
+#include <filesystem>
 #include <string>
 
 class Shader
@@ -12,8 +13,9 @@ public:
     ~Shader();
 
     void CreateFromString(const char* vertexCode, const char* fragmentCode);
-    void CreateFromFiles(const char* vertexLocation, const char* fragmentLocation);
-    std::string ReadFile(const char* fileLocation);
+    void CreateFromFiles(const std::filesystem::path& vertexLocation,
+                         const std::filesystem::path& fragmentLocation);
+    std::string ReadFile(const std::filesystem::path& fileLocation);
 
     void UseShader();
     void ClearShader();
