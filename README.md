@@ -72,23 +72,17 @@ In PowerShell:
 ```powershell
 git clone https://github.com/microsoft/vcpkg $env:USERPROFILE\vcpkg
 & $env:USERPROFILE\vcpkg\bootstrap-vcpkg.bat
-setx VCPKG_ROOT "$env:USERPROFILE\vcpkg"
 ```
 
-Then **close and reopen VS Code** so it can see the new `VCPKG_ROOT` environment variable.
+The starter automatically looks for vcpkg in `%USERPROFILE%\vcpkg`, so no environment variable is required when you use this recommended location.
 
-Verify it in a new PowerShell window:
+Verify the toolchain file exists:
 
 ```powershell
-$env:VCPKG_ROOT
-Test-Path "$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake"
+Test-Path "$env:USERPROFILE\vcpkg\scripts\buildsystems\vcpkg.cmake"
 ```
 
-The second command should print:
-
-```text
-True
-```
+It should print `True`. If you installed vcpkg somewhere else, set `VCPKG_ROOT` to that folder before configuring CMake.
 
 ---
 
@@ -119,11 +113,17 @@ brew install git cmake ninja pkg-config
 ```bash
 git clone https://github.com/microsoft/vcpkg ~/vcpkg
 ~/vcpkg/bootstrap-vcpkg.sh
-echo 'export VCPKG_ROOT="$HOME/vcpkg"' >> ~/.zshrc
-export VCPKG_ROOT="$HOME/vcpkg"
 ```
 
-Restart VS Code after setting `VCPKG_ROOT`.
+The starter automatically looks for vcpkg in `~/vcpkg`, so no environment variable is required when you use this recommended location.
+
+Verify the toolchain file exists:
+
+```bash
+ls ~/vcpkg/scripts/buildsystems/vcpkg.cmake
+```
+
+If you installed vcpkg somewhere else, set `VCPKG_ROOT` to that folder before configuring CMake.
 
 ### Apple Silicon or Intel?
 
@@ -152,6 +152,10 @@ sudo apt install -y \
   cmake \
   ninja-build \
   pkg-config \
+  autoconf \
+  autoconf-archive \
+  automake \
+  libtool \
   libxinerama-dev \
   libxcursor-dev \
   xorg-dev \
@@ -165,11 +169,17 @@ The X11/Mesa packages are required because the vcpkg GLFW port still relies on s
 ```bash
 git clone https://github.com/microsoft/vcpkg ~/vcpkg
 ~/vcpkg/bootstrap-vcpkg.sh
-echo 'export VCPKG_ROOT="$HOME/vcpkg"' >> ~/.bashrc
-export VCPKG_ROOT="$HOME/vcpkg"
 ```
 
-Restart VS Code after setting `VCPKG_ROOT`.
+The starter automatically looks for vcpkg in `~/vcpkg`, so no environment variable is required when you use this recommended location.
+
+Verify the toolchain file exists:
+
+```bash
+ls ~/vcpkg/scripts/buildsystems/vcpkg.cmake
+```
+
+If you installed vcpkg somewhere else, set `VCPKG_ROOT` to that folder before configuring CMake.
 
 ---
 
@@ -200,7 +210,7 @@ In VS Code:
 | Intel Mac | `macOS Intel (x64)` |
 | 64-bit Linux | `Linux x64` |
 
-CMake will configure the project and vcpkg will automatically download/build the required C++ libraries on the first run.
+CMake will configure the project and vcpkg will automatically download/build the required C++ libraries on the first run. The project finds vcpkg automatically when it is installed in the recommended location, so VS Code does not need to inherit a `VCPKG_ROOT` variable.
 
 The **first configuration/build can take several minutes**. Later builds are much faster.
 
@@ -269,37 +279,56 @@ Each configure preset has its own build directory under `build/`, so changing fr
 
 # Troubleshooting
 
-## `VCPKG_ROOT` is empty
+## `Bad CMake executable: ""` on macOS
 
-Check:
-
-### Windows PowerShell
-
-```powershell
-$env:VCPKG_ROOT
-```
-
-### macOS / Linux
+First verify that CMake itself is installed:
 
 ```bash
-echo $VCPKG_ROOT
+which cmake
+cmake --version
 ```
 
-If it is empty, set it again and **restart VS Code**.
+With Homebrew on Apple Silicon, `which cmake` will normally print `/opt/homebrew/bin/cmake`. If these commands work but CMake Tools still reports an empty executable, open **Preferences: Open User Settings (JSON)** and remove an empty setting such as:
+
+```json
+"cmake.cmakePath": ""
+```
+
+If necessary, set it explicitly to the path printed by `which cmake`, then fully quit and reopen VS Code.
 
 ---
 
 ## `Could not find toolchain file ... vcpkg.cmake`
 
-Confirm that this file exists:
+The starter now tries, in order:
 
-```text
-<VCPKG_ROOT>/scripts/buildsystems/vcpkg.cmake
+1. an explicitly supplied `CMAKE_TOOLCHAIN_FILE`;
+2. `VCPKG_ROOT`, if you use a custom vcpkg location;
+3. `%USERPROFILE%\vcpkg` on Windows;
+4. `~/vcpkg` on macOS/Linux.
+
+For the recommended installation, verify the file exists:
+
+### Windows
+
+```powershell
+Test-Path "$env:USERPROFILE\vcpkg\scripts\buildsystems\vcpkg.cmake"
 ```
 
-Then run:
+### macOS / Linux
 
-**CMake: Delete Cache and Reconfigure**
+```bash
+ls ~/vcpkg/scripts/buildsystems/vcpkg.cmake
+```
+
+If CMake previously cached a broken path such as `/scripts/buildsystems/vcpkg.cmake`, run **CMake: Delete Cache and Reconfigure**. If that still uses the old cache on macOS, remove only the current preset build directory and configure again:
+
+```bash
+rm -rf build/mac-arm64
+cmake --preset mac-arm64
+```
+
+For an Intel Mac, use `build/mac-intel` and `mac-intel` instead.
 
 ---
 
@@ -336,7 +365,9 @@ and select one of the Windows MSVC presets. If necessary, use:
 Make sure the Linux system dependencies were installed:
 
 ```bash
-sudo apt install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
+sudo apt install -y \
+  pkg-config autoconf autoconf-archive automake libtool \
+  libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev
 ```
 
 Then delete the failed build directory or run **CMake: Delete Cache and Reconfigure**.
