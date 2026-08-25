@@ -48,16 +48,28 @@ https://visualstudio.microsoft.com/downloads/
 
 CMake added the **Visual Studio 18 2026** generator in **CMake 4.2**. If your CMake is older, the VS2026 preset cannot work.
 
-Open **PowerShell** and install/update Git and CMake:
+Open **PowerShell** and install/update Git and CMake. **WinGet is the easiest option, but it is not required for this project.**
+
+### Option 1: Install with WinGet
 
 ```powershell
 winget install --id Git.Git -e
 winget install --id Kitware.CMake -e
 ```
 
-Check the version:
+If PowerShell says `winget` is not recognized, see **Windows: `winget` is not recognized** in the Troubleshooting section below. On managed/lab computers, you can also skip WinGet and install Git and CMake manually.
+
+### Option 2: Install manually
+
+- Git for Windows: https://git-scm.com/download/win
+- CMake: https://cmake.org/download/
+
+When installing CMake manually, allow the installer to add CMake to `PATH` if that option is offered.
+
+Check the installations:
 
 ```powershell
+git --version
 cmake --version
 ```
 
@@ -278,6 +290,36 @@ Each configure preset has its own build directory under `build/`, so changing fr
 ---
 
 # Troubleshooting
+
+## Windows: `winget` is not recognized
+
+WinGet is included with Microsoft's **App Installer** package. First check whether App Installer is registered for your Windows user:
+
+```powershell
+Get-AppxPackage Microsoft.DesktopAppInstaller
+```
+
+If this prints package information but `winget --version` is still not recognized, repair WinGet from PowerShell using Microsoft's recommended commands:
+
+```powershell
+Install-PackageProvider -Name NuGet -Force | Out-Null
+Install-Module -Name Microsoft.WinGet.Client -Force -Repository PSGallery | Out-Null
+Repair-WinGetPackageManager -Force -Latest
+```
+
+Close PowerShell completely, open a new PowerShell window, and verify:
+
+```powershell
+winget --version
+```
+
+If App Installer is not installed, install/update **App Installer** from Microsoft Store. Microsoft also provides a manual `.msixbundle` installation route for computers where Store installation is unavailable.
+
+Microsoft troubleshooting: https://learn.microsoft.com/windows/package-manager/winget/troubleshooting
+
+> WinGet is only a convenience for installing Git and CMake. If it remains unavailable on a managed university/lab computer, install Git and CMake manually and continue with the lab.
+
+---
 
 ## `Bad CMake executable: ""` on macOS
 
